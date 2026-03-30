@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>DonCausa — Campagnes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">🌿</div>
+        <h1>DonCausa</h1>
+        <p>Association &amp; ONG</p>
+    </div>
+    <nav class="nav-section">
+        <div class="nav-section-label">Navigation</div>
+        <a class="nav-item" th:href="@{/}"><span class="icon">📊</span> Tableau de bord</a>
+        <a class="nav-item active" th:href="@{/campagnes}"><span class="icon">🎯</span> Campagnes</a>
+        <a class="nav-item" th:href="@{/donateurs}"><span class="icon">👥</span> Donateurs</a>
+        <a class="nav-item" th:href="@{/dons}"><span class="icon">💰</span> Dons</a>
+    </nav>
+</aside>
+
+<main class="main">
+    <div class="topbar">
+        <div>
+            <h2>Campagnes</h2>
+            <div class="topbar-sub">Gérer vos campagnes de collecte</div>
+        </div>
+        <div class="topbar-actions">
+            <button class="btn btn-primary" onclick="openModal('modal-campagne')">＋ Nouvelle campagne</button>
+        </div>
+    </div>
+
+    <div class="page-content">
+
+        <!-- EMPTY -->
+        <div th:if="${campagnes == null or campagnes.isEmpty()}" class="empty-state" style="margin-top:60px">
+            <div class="empty-icon">🎯</div>
+            <div class="empty-title">Aucune campagne</div>
+            <div class="empty-sub">Créez votre première campagne de collecte</div>
+        </div>
+
+        <!-- CARDS GRID -->
+        <div class="cards-grid" th:if="${campagnes != null and !campagnes.isEmpty()}">
+            <div class="campaign-card" th:each="c : ${campagnes}">
+                <div class="campaign-card-header">
+                    <div>
+                        <div class="campaign-title" th:text="${c.titre}">Titre</div>
+                        <div class="campaign-meta">
+                            📅 <span th:text="${#temporals.format(c.debut,'dd/MM/yyyy')}">—</span>
+                            <span th:if="${c.fin != null}"> → <span th:text="${#temporals.format(c.fin,'dd/MM/yyyy')}">—</span></span>
+                        </div>
+                    </div>
+                    <span class="badge"
+                          th:classappend="${c.statut.name() == 'ACTIVE'} ? 'badge-green' : (${c.statut.name() == 'TERMINEE'} ? 'badge-blue' : 'badge-yellow')"
+                          th:text="${c.statut}">ACTIVE</span>
+                </div>
+
+                <div class="progress-wrap" style="margin:14px 0">
+                    <div class="progress-label">
+                        <span class="campaign-amount">
+                            <span th:text="${#numbers.formatDecimal(c.montantCollecte, 0, 'COMMA', 2, 'POINT')} + ' MAD'">0</span>
+                            <span class="obj"> / <span th:text="${#numbers.formatDecimal(c.objectif, 0, 'COMMA', 2, 'POINT')} + ' MAD'">0</span></span>
+                        </span>
+                        <span class="pct" th:text="${#numbers.formatDecimal(c.progression, 0, 'COMMA', 1, 'POINT')} + '%'">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" th:style="'width:' + ${c.progression} + '%'"></div>
+                    </div>
+                </div>
+
+                <div class="campaign-card-footer">
+                    <span class="meta-info">
+                        <span th:text="${c.nombreDons}">0</span> don(s)
+                    </span>
+                    <div style="display:flex;gap:6px">
+                        <!-- Bouton Modifier -->
+                        <button class="btn btn-secondary btn-sm"
+                                th:attr="
+            data-id=${c.id},
+            data-titre=${c.titre},
+            data-objectif=${c.objectif},
+            data-debut=${c.debut},
+            data-fin=${c.fin},
+            data-statut=${c.statut}"
+                                onclick="handleEditCampagne(this)">
+                            ✏️ Modifier
+                        </button>
+                        <!-- Bouton Supprimer -->
+                        <form th:action="@{/campagnes/delete/{id}(id=${c.id})}" method="post"
+                              onsubmit="return confirm('Supprimer cette campagne ?')">
+                            <button type="submit" class="btn btn-danger btn-sm">🗑</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- MODAL CRÉATION -->
+<div class="modal-overlay" id="modal-campagne">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Nouvelle Campagne</div>
+            <button class="modal-close" onclick="closeModal('modal-campagne')">×</button>
+        </div>
+        <form th:action="@{/campagnes}" method="post">
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label class="form-label">Titre *</label>
+                    <input class="form-input" type="text" name="titre" placeholder="Ex: Aide aux réfugiés" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Objectif (MAD) *</label>
+                    <input class="form-input" type="number" name="objectif" placeholder="100000" min="1" step="0.01" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Statut *</label>
+                    <select class="form-input" name="statut">
+                        <option value="ACTIVE">Active</option>
+                        <option value="PAUSE">En pause</option>
+                        <option value="TERMINEE">Terminée</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date de début *</label>
+                    <input class="form-input" type="date" name="debut" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date de fin</label>
+                    <input class="form-input" type="date" name="fin"/>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-campagne')">Annuler</button>
+                <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL MODIFICATION -->
+<div class="modal-overlay" id="modal-edit-campagne">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Modifier la Campagne</div>
+            <button class="modal-close" onclick="closeModal('modal-edit-campagne')">×</button>
+        </div>
+        <form id="form-edit-campagne" method="post">
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label class="form-label">Titre *</label>
+                    <input class="form-input" type="text" name="titre" id="edit-camp-titre" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Objectif (MAD) *</label>
+                    <input class="form-input" type="number" name="objectif" id="edit-camp-objectif" min="1" step="0.01" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Statut *</label>
+                    <select class="form-input" name="statut" id="edit-camp-statut">
+                        <option value="ACTIVE">Active</option>
+                        <option value="PAUSE">En pause</option>
+                        <option value="TERMINEE">Terminée</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date de début *</label>
+                    <input class="form-input" type="date" name="debut" id="edit-camp-debut" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date de fin</label>
+                    <input class="form-input" type="date" name="fin" id="edit-camp-fin"/>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-edit-campagne')">Annuler</button>
+                <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:src="@{/js/app.js}"></script>
+<script>
+function openEditCampagne(id, titre, objectif, debut, fin, statut) {
+    document.getElementById('form-edit-campagne').action = '/campagnes/edit/' + id;
+    document.getElementById('edit-camp-titre').value    = titre;
+    document.getElementById('edit-camp-objectif').value = objectif;
+    document.getElementById('edit-camp-debut').value    = debut;
+    document.getElementById('edit-camp-fin').value      = fin || '';
+    document.getElementById('edit-camp-statut').value   = statut;
+    openModal('modal-edit-campagne');
+}
+</script>
+</body>
+</html>

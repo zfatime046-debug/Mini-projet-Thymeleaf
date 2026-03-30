@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>DonCausa — Dons</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">🌿</div>
+        <h1>DonCausa</h1>
+        <p>Association &amp; ONG</p>
+    </div>
+    <nav class="nav-section">
+        <div class="nav-section-label">Navigation</div>
+        <a class="nav-item" th:href="@{/}"><span class="icon">📊</span> Tableau de bord</a>
+        <a class="nav-item" th:href="@{/campagnes}"><span class="icon">🎯</span> Campagnes</a>
+        <a class="nav-item" th:href="@{/donateurs}"><span class="icon">👥</span> Donateurs</a>
+        <a class="nav-item active" th:href="@{/dons}"><span class="icon">💰</span> Dons</a>
+    </nav>
+</aside>
+
+<main class="main">
+    <div class="topbar">
+        <div>
+            <h2>Dons</h2>
+            <div class="topbar-sub">Historique de tous les dons enregistrés</div>
+        </div>
+        <div class="topbar-actions">
+            <button class="btn btn-primary" onclick="openModal('modal-don')">＋ Enregistrer un don</button>
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="table-container">
+
+            <!-- TOOLBAR -->
+            <div class="table-toolbar">
+                <div class="search-wrap">
+                    <input class="search-input" type="text" id="search-don" placeholder="Rechercher…" oninput="filterDons()"/>
+                </div>
+                <select class="filter-select" id="filter-moyen" onchange="filterDons()">
+                    <option value="">Tous les moyens</option>
+                    <option value="VIREMENT">Virement</option>
+                    <option value="CASH">Cash</option>
+                    <option value="CHEQUE">Chèque</option>
+                    <option value="CARTE">Carte bancaire</option>
+                    <option value="PAYPAL">PayPal</option>
+                </select>
+                <select class="filter-select" id="filter-campagne" onchange="filterDons()">
+                    <option value="">Toutes les campagnes</option>
+                    <option th:each="c : ${campagnes}" th:value="${c.titre}" th:text="${c.titre}">Campagne</option>
+                </select>
+            </div>
+
+            <!-- EMPTY -->
+            <div th:if="${dons == null or dons.isEmpty()}" class="empty-state">
+                <div class="empty-icon">💰</div>
+                <div class="empty-title">Aucun don enregistré</div>
+                <div class="empty-sub">Enregistrez le premier don</div>
+            </div>
+
+            <!-- TABLE -->
+            <table th:if="${dons != null and !dons.isEmpty()}" id="dons-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Donateur</th>
+                        <th>Campagne</th>
+                        <th>Montant</th>
+                        <th>Moyen</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="d : ${dons}"
+                        th:attr="data-donateur=${d.donateurNom},data-moyen=${d.moyen},data-campagne=${d.campagneTitre}">
+                        <td class="muted" th:text="${#temporals.format(d.dateDon,'dd/MM/yyyy')}">—</td>
+                        <td><strong th:text="${d.donateurNom}">—</strong></td>
+                        <td th:text="${d.campagneTitre}">—</td>
+                        <td class="amount" th:text="${#numbers.formatDecimal(d.montant, 0, 'COMMA', 2, 'POINT')} + ' MAD'">0 MAD</td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${d.moyen.name() == 'VIREMENT'} ? 'badge-blue' :
+                                                  (${d.moyen.name() == 'CASH'} ? 'badge-green' :
+                                                  (${d.moyen.name() == 'CARTE'} ? 'badge-purple' : 'badge-yellow'))"
+                                  th:text="${d.moyen}">MOYEN</span>
+                        </td>
+                        <td>
+                            <form th:action="@{/dons/delete/{id}(id=${d.id})}" method="post"
+                                  onsubmit="return confirm('Supprimer ce don ?')">
+                                <button type="submit" class="btn btn-danger btn-sm">🗑</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<!-- MODAL CRÉATION DON -->
+<div class="modal-overlay" id="modal-don">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Enregistrer un Don</div>
+            <button class="modal-close" onclick="closeModal('modal-don')">×</button>
+        </div>
+        <form th:action="@{/dons}" method="post">
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label class="form-label">Donateur *</label>
+                    <select class="form-input" name="donateurId" required>
+                        <option value="">— Sélectionner —</option>
+                        <option th:each="d : ${donateurs}"
+                                th:value="${d.id}"
+                                th:text="${d.nom} + ' (' + ${d.type} + ')'">Donateur</option>
+                    </select>
+                </div>
+                <div class="form-group full">
+                    <label class="form-label">Campagne *</label>
+                    <select class="form-input" name="campagneId" required>
+                        <option value="">— Sélectionner —</option>
+                        <option th:each="c : ${campagnes}"
+                                th:value="${c.id}"
+                                th:text="${c.titre}">Campagne</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Montant (MAD) *</label>
+                    <input class="form-input" type="number" name="montant" placeholder="500" min="1" step="0.01" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date du don *</label>
+                    <input class="form-input" type="date" name="dateDon" required
+                           th:value="${#temporals.format(#temporals.createNow(),'yyyy-MM-dd')}"/>
+                </div>
+                <div class="form-group full">
+                    <label class="form-label">Moyen de paiement *</label>
+                    <select class="form-input" name="moyen">
+                        <option value="VIREMENT">🏦 Virement</option>
+                        <option value="CASH">💵 Cash</option>
+                        <option value="CHEQUE">📝 Chèque</option>
+                        <option value="CARTE">💳 Carte bancaire</option>
+                        <option value="PAYPAL">🅿️ PayPal</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-don')">Annuler</button>
+                <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:src="@{/js/app.js}"></script>
+<script>
+function filterDons() {
+    const search  = document.getElementById('search-don').value.toLowerCase();
+    const moyen   = document.getElementById('filter-moyen').value;
+    const campagne = document.getElementById('filter-campagne').value;
+    document.querySelectorAll('#dons-table tbody tr').forEach(row => {
+        const donateur = (row.dataset.donateur || '').toLowerCase();
+        const rowMoyen = row.dataset.moyen || '';
+        const rowCamp  = row.dataset.campagne || '';
+        const ok = donateur.includes(search)
+                && (!moyen    || rowMoyen === moyen)
+                && (!campagne || rowCamp  === campagne);
+        row.style.display = ok ? '' : 'none';
+    });
+}
+</script>
+</body>
+</html>
