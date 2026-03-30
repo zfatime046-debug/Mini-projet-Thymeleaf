@@ -71,22 +71,14 @@ src/main/java/com/association/gestiondons/
 
 ## 🚀 Lancer le projet
 
-```bash
-# Compiler et démarrer
-mvn spring-boot:run
-
-# Avec données de démo (profil dev)
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
-```
-
-Accès :
-- **API** : http://localhost:8080/api
-- **H2 Console** : http://localhost:8080/h2-console  
-  *(JDBC URL: `jdbc:h2:mem:gestiondonsdb`, user: `sa`, password: vide)*
+<img width="1853" height="847" alt="image" src="https://github.com/user-attachments/assets/2750be48-b03e-4896-b140-f1ba4e37b681" />
 
 ---
 
 ## 📡 Endpoints REST
+###Test avec swagger:http://localhost:8081/swagger-ui/index.html#/
+<img width="1621" height="940" alt="image" src="https://github.com/user-attachments/assets/05cff36c-6601-4010-b480-83183843ec4d" />
+
 
 ### Campagnes `/api/campagnes`
 
@@ -141,7 +133,9 @@ POST /api/campagnes
   "fin": "2025-12-31",
   "statut": "ACTIVE"
 }
+
 ```
+<img width="1546" height="948" alt="image" src="https://github.com/user-attachments/assets/aec01f23-8109-43b4-8efb-f5cceb404f46" />
 
 ### Enregistrer un don
 ```json
@@ -154,28 +148,17 @@ POST /api/dons
   "donateurId": 2
 }
 ```
+<img width="1548" height="930" alt="image" src="https://github.com/user-attachments/assets/0807561f-6ca4-4a2b-b858-ca49473d478b" />
 
-### Réponse standard
-```json
-{
-  "success": true,
-  "message": "Ressource créée avec succès",
-  "data": { ... },
-  "timestamp": "2025-05-15T10:30:00"
-}
-```
 
 ---
 
-## 🧪 Tests
+## ScreenShots:
+<img width="1919" height="739" alt="image" src="https://github.com/user-attachments/assets/e7a31852-c355-4461-98d2-e0ed57cf82e5" />
+<img width="1750" height="595" alt="image" src="https://github.com/user-attachments/assets/df5a6145-2196-4395-be0a-c607ee138367" />
 
-```bash
-# Lancer tous les tests
-mvn test
-
-# Rapport de couverture (avec JaCoCo)
-mvn verify
-```
+<img width="1919" height="650" alt="image" src="https://github.com/user-attachments/assets/1c8408e4-c2e1-472d-8213-46e4db4b039c" />
+<img width="1919" height="730" alt="image" src="https://github.com/user-attachments/assets/ce9239ca-60f8-4e77-9411-bccf38d757e3" />
 
 ---
 
@@ -200,7 +183,7 @@ mvn verify
 Dans `application.properties`, remplacer la section H2 par :
 
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/gestiondons?useSSL=false&serverTimezone=UTC
+spring.datasource.url=jdbc:mysql://localhost:3307/lagestiondons?useSSL=false&serverTimezone=UTC
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 spring.datasource.username=root
 spring.datasource.password=yourpassword
