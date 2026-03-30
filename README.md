@@ -173,7 +173,6 @@ POST /api/dons
 | MapStruct | 1.5.5 | Mapping Entity ↔ DTO |
 | Lombok | 1.18.30 | Réduction boilerplate |
 | Bean Validation | — | Validation des entrées |
-| H2 | — | BDD embarquée (dev) |
 | JUnit 5 + Mockito | — | Tests unitaires |
 
 ---
